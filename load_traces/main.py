@@ -30,9 +30,6 @@ def get_most_recent_file(directory, pattern):
     return max(files, key=os.path.getmtime)
 
 
-# Data directory path
-
-
 # Check for the most recent CSV and Parquet files
 most_recent_csv = get_most_recent_file(data_dir, "*.csv")
 most_recent_parquet = get_most_recent_file(data_dir, "*.parquet")
