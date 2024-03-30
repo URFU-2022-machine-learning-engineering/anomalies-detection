@@ -2,5 +2,5 @@
     remote = minio
     autostage = true
 ['remote "minio"']
-    url = s3://whisper-models
+    url = s3://dataset
     endpointurl = https://minio.dzailz.su
