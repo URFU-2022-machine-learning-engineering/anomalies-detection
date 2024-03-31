@@ -75,16 +75,31 @@ spans_df = pd.DataFrame(spans_list)
 # Optional: Convert startTime to a readable datetime format
 spans_df['startTime'] = pd.to_datetime(spans_df['startTime'], unit='us')
 
+# Define file paths for daily and full (cumulative) backups
 date_suffix = datetime.now().strftime("%Y-%m-%d")
-csv_filename = f"{parent_path}/data/upload_spans_{date_suffix}.csv"
-parquet_filename = f"{parent_path}/data/upload_spans_{date_suffix}.parquet"
+daily_csv_filename = f"{data_dir}/daily_upload_spans_{date_suffix}.csv"
+daily_parquet_filename = f"{data_dir}/daily_upload_spans_{date_suffix}.parquet"
+full_csv_filename = f"{data_dir}/full_upload_spans.csv"
+full_parquet_filename = f"{data_dir}/full_upload_spans.parquet"
 
-# Save the DataFrame to both CSV and Parquet files
-spans_df.to_csv(path_or_buf=csv_filename, index=False)
-spans_df.to_parquet(path=parquet_filename, index=False)
+# Save today's data (daily backup) without affecting previous daily backups
+spans_df.to_csv(path_or_buf=daily_csv_filename, index=False)
+spans_df.to_parquet(path=daily_parquet_filename, index=False)
 
-# Append new data to the previous data
-combined_data_df = pd.concat([previous_data_df, spans_df], ignore_index=True)
+# For full data backup: Check if a full backup exists, load it, append new data, and save
+if os.path.exists(full_csv_filename) and os.path.exists(full_parquet_filename):
+    # Load existing full data
+    full_data_df = pd.read_parquet(full_parquet_filename)
+else:
+    # Initialize empty DataFrame if full data doesn't exist yet
+    full_data_df = pd.DataFrame()
+
+# Append today's data to the full data DataFrame
+full_data_combined_df = pd.concat([full_data_df, spans_df], ignore_index=True)
+
+# Save the updated full data (cumulative backup)
+full_data_combined_df.to_csv(path_or_buf=full_csv_filename, index=False)
+full_data_combined_df.to_parquet(path=full_parquet_filename, index=False)
 
 
 backup_dir.mkdir(parents=True, exist_ok=True)
@@ -94,6 +109,3 @@ if most_recent_csv:
 if most_recent_parquet:
     shutil.move(most_recent_parquet, backup_dir / most_recent_parquet.name)
 
-# Save the combined DataFrame to both CSV and Parquet files
-combined_data_df.to_csv(path_or_buf=csv_filename, index=False)
-combined_data_df.to_parquet(path=parquet_filename, index=False)
