@@ -60,7 +60,9 @@ def dvc_add_and_push():
         subprocess.run(['git', 'add', "data.dvc"], check=True)
         subprocess.run(['git', 'commit', '-m', 'Update logs'], check=True)
         subprocess.run(['dvc', 'push'], check=True)
-        logging.info(f"Logs added and pushed to DVC successfully.")
+        logging.info("Logs added and pushed to DVC successfully.")
+        subprocess.run(['git', 'push'], check=True)
+        logging.info("Git push successful.")
     except subprocess.CalledProcessError as e:
         logging.error(f"Failed to add or push logs to DVC. Error: {e}")
 
@@ -72,8 +74,13 @@ logs_dir = data_dir / "logs"
 logs_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 df_name = "logs.csv"
 
-# Initialize an empty DataFrame to store logs
-df_logs: pd.DataFrame = pd.DataFrame()
+# Attempt to read existing logs from CSV
+csv_path = logs_dir / df_name
+if csv_path.exists():
+    df_logs: pd.DataFrame = pd.read_csv(csv_path)
+else:
+    # Initialize an empty DataFrame to store logs
+    df_logs: pd.DataFrame = pd.DataFrame()
 
 try:
     while True:
@@ -81,15 +88,15 @@ try:
 
         # Define the time range for fetching logs
         end_timestamp: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-        start_timestamp: datetime.datetime = end_timestamp - datetime.timedelta(minutes=30)  # Last 30 minutes
+        start_timestamp: datetime.datetime = end_timestamp - datetime.timedelta(minutes=40)  # Last 30 minutes
 
         log_entries: list[str] = fetch_logs(start_timestamp, end_timestamp)
         new_logs_df: pd.DataFrame = parse_logs_to_dataframe(log_entries)
 
+        # Append new logs to the existing DataFrame and remove duplicates
         df_logs = pd.concat([df_logs, new_logs_df], ignore_index=True).drop_duplicates(subset=['time'])
 
         # Save DataFrame to CSV
-        csv_path = logs_dir / df_name
         df_logs.to_csv(csv_path, index=False)
         logging.info(f"Logs updated and saved at {csv_path}.")
 
