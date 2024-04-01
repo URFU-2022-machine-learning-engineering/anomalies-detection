@@ -103,17 +103,19 @@ daily_parquet_filename = f"{data_dir}/daily_upload_spans_{date_suffix}.parquet"
 full_csv_filename = f"{data_dir}/full_upload_spans.csv"
 full_parquet_filename = f"{data_dir}/full_upload_spans.parquet"
 
-logging.info("Data saved successfully. Performing backup...")
 # Save today's data (daily backup) without affecting previous daily backups
 spans_df.to_csv(path_or_buf=daily_csv_filename, index=False)
 spans_df.to_parquet(path=daily_parquet_filename, index=False)
+logging.info("Data saved successfully. Performing backup...")
 
 # For full data backup: Check if a full backup exists, load it, append new data, and save
 if os.path.exists(full_csv_filename) and os.path.exists(full_parquet_filename):
     # Load existing full data
     full_data_df = pd.read_parquet(full_parquet_filename)
+    logging.info("Full data loaded successfully.")
 else:
     # Initialize empty DataFrame if full data doesn't exist yet
+    logging.warning("No full data found, initializing new dataset.")
     full_data_df = pd.DataFrame()
 
 # Append today's data to the full data DataFrame

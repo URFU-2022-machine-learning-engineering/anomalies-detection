@@ -88,7 +88,7 @@ try:
 
         # Define the time range for fetching logs
         end_timestamp: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-        start_timestamp: datetime.datetime = end_timestamp - datetime.timedelta(minutes=40)  # Last 30 minutes
+        start_timestamp: datetime.datetime = end_timestamp - datetime.timedelta(minutes=40)
 
         log_entries: list[str] = fetch_logs(start_timestamp, end_timestamp)
         new_logs_df: pd.DataFrame = parse_logs_to_dataframe(log_entries)
