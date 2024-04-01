@@ -3,13 +3,15 @@
 set -e
 
 cd "$HOME/anomalies-detection" || exit 1  # Ensure we're in the right directory
+source .venv/bin/activate
+
 
 git pull
-poetry run dvc pull
+dvc pull
 sleep 5
-poetry run python load_traces/main.py
+python load_traces/main.py
 sleep 5
-poetry run dvc add data/
+dvc add data/
 git add data.dvc
 git commit -m "Daily backup of data"
 git push

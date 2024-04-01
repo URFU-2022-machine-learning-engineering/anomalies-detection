@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 import pandas as pd
 import shutil
@@ -8,24 +9,37 @@ from utils.date_utils import get_date_strings
 from utils.fetch_jaeger_traces import fetch_jaeger_traces
 from utils.convert_tag_value import convert_tag_value
 
+# Configure logging
+parent_path = Path(__file__).parents[1]
+log_file = parent_path / 'backup_script.log'
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    handlers=[
+                        logging.FileHandler(log_file),
+                        logging.StreamHandler()
+                    ])
+
+logging.info("Script started.")
+
 service_name = "sr-api"
 start_date_str, end_date_str = get_date_strings()
 limit = 25000
-operation = "/upload"  # Directly pass the operation name
-parent_path = Path(__file__).parents[1]
+operation = "/upload"
 data_dir = parent_path / "data"
 backup_dir = data_dir / "backups" / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 username = os.getenv("JAEGER_USERNAME")
 password = os.getenv("JAEGER_PASSWORD")
-
 server = "http://192.168.111.66:16686/api/traces"
+
+logging.info(f"Fetching traces for {service_name} service from {start_date_str} to {end_date_str}.")
 
 
 def get_most_recent_file(directory, pattern):
     """Get the most recent file matching the pattern in the given directory."""
     files = list(directory.glob(pattern))
     if not files:
+        logging.warning(f"No files matching {pattern} in {directory}.")
         return None
     return max(files, key=os.path.getmtime)
 
@@ -36,8 +50,10 @@ most_recent_parquet = get_most_recent_file(data_dir, "*.parquet")
 
 # Load the most recent data if available
 if most_recent_csv and most_recent_parquet:
+    logging.info("Loading the most recent parquet data for concatenation.")
     previous_data_df = pd.read_parquet(most_recent_parquet)
 else:
+    logging.info("No previous data found, initializing new dataset.")
     previous_data_df = pd.DataFrame()
 
 traces = fetch_jaeger_traces(
@@ -48,8 +64,11 @@ traces = fetch_jaeger_traces(
     username=username,
     password=password
 )
+logging.info("Traces fetched successfully.")
 
-# Simplified version of the code
+
+# Process and save the data
+logging.info("Processing fetched traces.")
 spans_list = [
     {
         **{
@@ -75,6 +94,8 @@ spans_df = pd.DataFrame(spans_list)
 # Optional: Convert startTime to a readable datetime format
 spans_df['startTime'] = pd.to_datetime(spans_df['startTime'], unit='us')
 
+
+logging.info("Processing completed. Saving data...")
 # Define file paths for daily and full (cumulative) backups
 date_suffix = datetime.now().strftime("%Y-%m-%d")
 daily_csv_filename = f"{data_dir}/daily_upload_spans_{date_suffix}.csv"
@@ -82,6 +103,7 @@ daily_parquet_filename = f"{data_dir}/daily_upload_spans_{date_suffix}.parquet"
 full_csv_filename = f"{data_dir}/full_upload_spans.csv"
 full_parquet_filename = f"{data_dir}/full_upload_spans.parquet"
 
+logging.info("Data saved successfully. Performing backup...")
 # Save today's data (daily backup) without affecting previous daily backups
 spans_df.to_csv(path_or_buf=daily_csv_filename, index=False)
 spans_df.to_parquet(path=daily_parquet_filename, index=False)
@@ -109,3 +131,4 @@ if most_recent_csv:
 if most_recent_parquet:
     shutil.move(most_recent_parquet, backup_dir / most_recent_parquet.name)
 
+logging.info("Backup completed successfully.")
