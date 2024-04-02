@@ -109,9 +109,12 @@ spans_df.to_parquet(path=daily_parquet_filename, index=False)
 logging.info("Data saved successfully. Performing backup...")
 
 # For full data backup: Check if a full backup exists, load it, append new data, and save
-if os.path.exists(full_csv_filename) and os.path.exists(full_parquet_filename):
+if os.path.exists(full_parquet_filename):
     # Load existing full data
     full_data_df = pd.read_parquet(full_parquet_filename)
+    logging.info("Full data loaded successfully.")
+elif os.path.exists(full_csv_filename):
+    full_data_df = pd.read_csv(full_csv_filename)
     logging.info("Full data loaded successfully.")
 else:
     # Initialize empty DataFrame if full data doesn't exist yet
@@ -123,7 +126,9 @@ full_data_combined_df = pd.concat([full_data_df, spans_df], ignore_index=True)
 
 # Save the updated full data (cumulative backup)
 full_data_combined_df.to_csv(path_or_buf=full_csv_filename, index=False)
+logging.info(f"full csv data saved to {full_csv_filename}")
 full_data_combined_df.to_parquet(path=full_parquet_filename, index=False)
+logging.info(f"full parquet data saved to {full_parquet_filename}")
 
 
 backup_dir.mkdir(parents=True, exist_ok=True)

@@ -27,6 +27,7 @@ def fetch_logs(start_timestamp: datetime.datetime, end_timestamp: datetime.datet
         "limit": 5000,
     }
     response = requests.get(loki_url, params=params)
+    logging.debug(response.headers)
     if response.status_code == 200:
         logging.info("Logs fetched successfully.")
         logs = response.json()
@@ -53,14 +54,14 @@ def parse_logs_to_dataframe(log_entries: list[str]) -> pd.DataFrame:
     return pd.DataFrame(parsed_log_entries)
 
 
-def dvc_add_and_push():
+def dvc_add_and_push(data_dir, dvc_file="data.dvc", message="Update logs"):
     """Add and push the given file to DVC remote storage."""
     try:
-        subprocess.run(['dvc', 'add', "data/"], check=True)
-        subprocess.run(['git', 'add', "data.dvc"], check=True)
-        subprocess.run(['git', 'commit', '-m', 'Update logs'], check=True)
+        subprocess.run(['dvc', 'add', data_dir], check=True)
+        subprocess.run(['git', 'add', dvc_file], check=True)
+        subprocess.run(['git', 'commit', '-m', message], check=True)
         subprocess.run(['dvc', 'push'], check=True)
-        logging.info("Logs added and pushed to DVC successfully.")
+        logging.info(f"Logs added {data_dir}, {dvc_file} and pushed to DVC successfully.")
         subprocess.run(['git', 'push'], check=True)
         logging.info("Git push successful.")
     except subprocess.CalledProcessError as e:
@@ -69,6 +70,7 @@ def dvc_add_and_push():
 
 # Directory setup
 parent_path = Path(__file__).resolve().parents[1]
+dvc_file = parent_path / "data.dvc"
 data_dir = parent_path / "data"
 logs_dir = data_dir / "logs"
 logs_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
@@ -101,7 +103,7 @@ try:
         logging.info(f"Logs updated and saved at {csv_path}.")
 
         # DVC Add and Push
-        dvc_add_and_push()
+        dvc_add_and_push(data_dir=data_dir, dvc_file=str(dvc_file))
 
         logging.info("Sleeping for 30 minutes...")
         time.sleep(1800)  # Sleep for 30 minutes
