@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "$HOME/urfu/anomalies-detection" || exit 1  # Ensure we're in the right directory
+cd "$HOME/anomalies-detection" || exit 1  # Ensure we're in the right directory
 source .venv/bin/activate
 
 git pull
