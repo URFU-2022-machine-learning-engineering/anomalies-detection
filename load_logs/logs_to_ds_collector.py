@@ -53,6 +53,14 @@ def parse_logs_to_dataframe(log_entries: list[str]) -> pd.DataFrame:
 
     return pd.DataFrame(parsed_log_entries)
 
+def dvc_and_git_pull():
+    try:
+        subprocess.run(["git", "pull"], check=True)
+        logging.info("Git pull successful.")
+        subprocess.run(["dvc", "pull"], check=True)
+        logging.info("DVC pull successful.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Failed to pull data. Error: {e}")
 
 def dvc_add_and_push(data_dir, dvc_file="data.dvc", message="Update logs"):
     """Add and push the given file to DVC remote storage."""
@@ -103,7 +111,7 @@ try:
         logging.info(f"Logs updated and saved at {csv_path}.")
 
         # DVC Add and Push
-        dvc_add_and_push(data_dir=data_dir, dvc_file=str(dvc_file))
+        dvc_add_and_push(data_dir=data_dir, dvc_file=str(dvc_file), message=f"Update logs {datetime.datetime.now()}")
 
         logging.info("Sleeping for 30 minutes...")
         time.sleep(1800)  # Sleep for 30 minutes
