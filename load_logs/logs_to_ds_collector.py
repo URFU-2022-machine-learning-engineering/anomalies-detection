@@ -97,6 +97,7 @@ try:
         logging.info("Script execution started.")
 
         # Define the time range for fetching logs
+        logging.debug("defining time range...")
         end_timestamp: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
         start_timestamp: datetime.datetime = end_timestamp - datetime.timedelta(minutes=40)
 
@@ -104,17 +105,20 @@ try:
         new_logs_df: pd.DataFrame = parse_logs_to_dataframe(log_entries)
 
         # Append new logs to the existing DataFrame and remove duplicates
+        logging.info(f"Appending {len(new_logs_df)} new log entries to old logs {len(df_logs)}.")
         df_logs = pd.concat([df_logs, new_logs_df], ignore_index=True).drop_duplicates(subset=['time'])
 
-        # Save DataFrame to CSV
+        logging.info("Saving logs to CSV...")
         df_logs.to_csv(csv_path, index=False)
         logging.info(f"Logs updated and saved at {csv_path}.")
 
-        # DVC Add and Push
+        logging.debug("Performing DVC and Git pull...")
+        dvc_and_git_pull()
+        logging.debug("Performing DVC add and push...")
         dvc_add_and_push(data_dir=data_dir, dvc_file=str(dvc_file), message=f"Update logs {datetime.datetime.now()}")
 
         logging.info("Sleeping for 30 minutes...")
-        time.sleep(1800)  # Sleep for 30 minutes
+        time.sleep(1800)
 except KeyboardInterrupt:
     logging.info("Script terminated by user.")
 except Exception as e:
