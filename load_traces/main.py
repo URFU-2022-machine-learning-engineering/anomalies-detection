@@ -1,4 +1,5 @@
 from datetime import datetime
+from pyarrow.lib import ArrowTypeError
 import logging
 
 import pandas as pd
@@ -127,8 +128,11 @@ full_data_combined_df = pd.concat([full_data_df, spans_df], ignore_index=True)
 # Save the updated full data (cumulative backup)
 full_data_combined_df.to_csv(path_or_buf=full_csv_filename, index=False)
 logging.info(f"full csv data saved to {full_csv_filename}")
-full_data_combined_df.to_parquet(path=full_parquet_filename, index=False)
-logging.info(f"full parquet data saved to {full_parquet_filename}")
+try:
+    full_data_combined_df.to_parquet(path=full_parquet_filename, index=False)
+    logging.info(f"full parquet data saved to {full_parquet_filename}")
+except ArrowTypeError as ate:
+    logging.error(f"Failed to save parquet file. Error was: {ate}")
 
 
 backup_dir.mkdir(parents=True, exist_ok=True)
