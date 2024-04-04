@@ -53,6 +53,7 @@ def parse_logs_to_dataframe(log_entries: list[str]) -> pd.DataFrame:
 
     return pd.DataFrame(parsed_log_entries)
 
+
 def dvc_and_git_pull():
     try:
         subprocess.run(["git", "pull"], check=True)
@@ -61,6 +62,7 @@ def dvc_and_git_pull():
         logging.info("DVC pull successful.")
     except subprocess.CalledProcessError as e:
         logging.error(f"Failed to pull data. Error: {e}")
+
 
 def dvc_add_and_push(data_dir, dvc_file="data.dvc", message="Update logs"):
     """Add and push the given file to DVC remote storage."""
@@ -91,10 +93,13 @@ if csv_path.exists():
 else:
     # Initialize an empty DataFrame to store logs
     df_logs: pd.DataFrame = pd.DataFrame()
+    logging.warning("Failed to load existing log data, blank df created")
 
 try:
     while True:
         logging.info("Script execution started.")
+        logging.debug("Performing DVC and Git pull...")
+        dvc_and_git_pull()
 
         # Define the time range for fetching logs
         logging.debug("defining time range...")
@@ -112,8 +117,6 @@ try:
         df_logs.to_csv(csv_path, index=False)
         logging.info(f"Logs updated and saved at {csv_path}.")
 
-        logging.debug("Performing DVC and Git pull...")
-        dvc_and_git_pull()
         logging.debug("Performing DVC add and push...")
         dvc_add_and_push(data_dir=data_dir, dvc_file=str(dvc_file), message=f"Update logs {datetime.datetime.now()}")
 
