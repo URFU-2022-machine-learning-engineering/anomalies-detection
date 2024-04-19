@@ -4,6 +4,7 @@ version = "0.0.1"
 description = "Anomalies detection in software development cycle"
 authors = ["Vladimir Katin <katin.v.v@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
