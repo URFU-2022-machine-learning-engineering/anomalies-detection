@@ -6,3 +6,4 @@ source .venv/bin/activate
 git pull
 dvc pull
 python load_logs/logs_to_ds_collector.py
+
