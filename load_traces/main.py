@@ -5,6 +5,7 @@ import logging
 import pandas as pd
 import shutil
 import os
+from yaml import safe_load
 from pathlib import Path
 from utils.date_utils import get_date_strings
 from utils.fetch_jaeger_traces import fetch_jaeger_traces
@@ -12,13 +13,14 @@ from utils.convert_tag_value import convert_tag_value
 
 # Configure logging
 parent_path = Path(__file__).parents[1]
-log_file = parent_path / 'backup_script.log'
+log_file = parent_path / "backup_script.log"
 logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    format="%(asctime)s - %(levelname)s - %(message)s",
                     handlers=[
                         logging.FileHandler(log_file),
                         logging.StreamHandler()
                     ])
+config = safe_load(open(parent_path / "config.yml"))
 
 logging.info("Script started.")
 
@@ -31,7 +33,7 @@ backup_dir = data_dir / "backups" / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 username = os.getenv("JAEGER_USERNAME")
 password = os.getenv("JAEGER_PASSWORD")
-server = "http://192.168.111.66:16686/api/traces"
+server = config["server"]
 
 logging.info(f"Fetching traces for {service_name} service from {start_date_str} to {end_date_str}.")
 
