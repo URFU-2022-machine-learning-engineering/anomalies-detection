@@ -1,7 +1,7 @@
 import requests
 
 from requests.auth import HTTPBasicAuth
-from utils.date_utils import date_to_timestamp_microseconds
+from load_traces.utils.date_utils import date_to_timestamp_microseconds
 
 
 def fetch_jaeger_traces(

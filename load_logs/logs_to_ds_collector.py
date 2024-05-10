@@ -7,9 +7,21 @@ import time
 import logging
 import subprocess
 from typing import Any
+from yaml import safe_load
 
 # Setup logging
 logging.basicConfig(filename='log_fetcher.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def get_config(path: Path | str) -> dict:
+    """Load the configuration from a config file."""
+    with open(path) as file:
+        config = safe_load(file)
+    return config
+
+
+parent_path = Path(__file__).parents[1]
+config_path = parent_path / "config.yml"
 
 
 def get_unix_timestamp_ns(dt: datetime.datetime) -> int:
@@ -19,7 +31,7 @@ def get_unix_timestamp_ns(dt: datetime.datetime) -> int:
 
 def fetch_logs(start_timestamp: datetime.datetime, end_timestamp: datetime.datetime) -> list[str]:
     """Fetch logs from Loki within the specified timestamp range."""
-    loki_url = "http://192.168.111.66:3100/loki/api/v1/query_range"
+    loki_url = get_config(config_path)["loki"]
     params = {
         "query": "{container_name=\"/sr-api\"} |= `` | json | __error__=``",
         "start": get_unix_timestamp_ns(start_timestamp),

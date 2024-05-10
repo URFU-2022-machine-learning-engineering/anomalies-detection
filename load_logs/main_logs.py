@@ -1,12 +1,28 @@
-from time import sleep
+from pathlib import Path
+
 import requests
 import datetime
 import pandas as pd
 import json
+from yaml import safe_load
+
 
 def get_unix_timestamp_ns(dt):
     """Convert a datetime object to Unix timestamp in nanoseconds."""
     return int(dt.timestamp() * 1e9)
+
+
+def get_config(path: Path | str) -> dict:
+    """Load the configuration from a config file."""
+    with open(path) as file:
+        config = safe_load(file)
+    return config
+
+
+parent_path = Path(__file__).parents[1]
+config_path = parent_path / "config.yml"
+server = get_config(config_path)["loki"]
+
 
 def fetch_logs_for_hour(start_hour):
     """Fetch logs for a specific hour."""
@@ -29,7 +45,7 @@ def fetch_logs_for_hour(start_hour):
 # Setup
 end_timestamp = datetime.datetime.now(datetime.timezone.utc)
 start_timestamp = end_timestamp - datetime.timedelta(days=1)
-loki_url = "http://192.168.111.66:3100/loki/api/v1/query_range"
+loki_url = server
 
 # Collect logs
 all_log_entries = []
@@ -43,6 +59,7 @@ while current_hour < end_timestamp:
     print(f"Number of logs fetched: {len(hour_log_entries)}")
     all_log_entries.extend(hour_log_entries)
     current_hour += datetime.timedelta(hours=1)
+
 
 # Handle logs here
 def parse_log_entry(log_entry):
