@@ -25,7 +25,7 @@ cd URFU-2022-machine-learning-engineering
 #### Install dependencies
 
 ```bash
-    poetry install
+poetry install
 ```
 ## Configuration
 - Create a config.yml file in the root directory with server details.
@@ -88,5 +88,4 @@ python concat.py
 ## License
 
 This project is licensed under the GPLv3 License - see the LICENSE file for details.
-Contact
 
