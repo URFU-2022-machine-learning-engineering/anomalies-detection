@@ -1,5 +1,0 @@
----
-username: "username"
-password: "password"
-limit: 25000
-operation: "/upload"
